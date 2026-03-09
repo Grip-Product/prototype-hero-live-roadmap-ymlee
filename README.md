@@ -1,2 +1,2 @@
-# as-is_storelive
+# ASIS_STORE_LIVE
 AS-IS 스토어라이브
