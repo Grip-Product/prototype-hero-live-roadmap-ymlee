@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Grip 비즈니스 - 한정판매 라이브</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet"/>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; }
+input:focus { outline: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useRef } = React;
+
+/* ── 인라인 SVG 아이콘 ── */
+const IC = { X:`<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>`, Heart:`<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>`, Share2:`<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>`, Gift:`<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>`, ShoppingBag:`<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>`, Plus:`<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>`, Minus:`<line x1="5" y1="12" x2="19" y2="12"/>`, Ticket:`<path d="M15 5v2"/><path d="M15 11v2"/><path d="M15 17v2"/><path d="M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V7a2 2 0 0 1 2-2z"/>`, RotateCw:`<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>`, MoreVertical:`<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>`, Maximize2:`<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>`, Check:`<polyline points="20 6 9 13 4 10"/>`, Search:`<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>`, ChevronLeft:`<polyline points="15 18 9 12 15 6"/>`, ChevronRight:`<polyline points="9 18 15 12 9 6"/>`, Bell:`<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>`, Store:`<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>`, Eye:`<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>` };
+const Ic = ({ n, size=16, cls="", sw=2, style={} }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" className={cls} style={style} dangerouslySetInnerHTML={{__html: IC[n]||''}}/>
+);
+
+/* ── ProductImg ── */
+const ProductImg = ({ size="md", badge }) => {
+  const cfg = { sm:[28,12], md:[40,16], lg:[48,18], xl:[56,20] };
+  const [dim, iconSz] = cfg[size]||cfg.md;
+  return (
+    <div style={{width:dim,height:dim,borderRadius:8,background:'#e0f2fe',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,position:'relative',overflow:'visible'}}>
+      {badge && <span style={{position:'absolute',top:-4,left:-4,zIndex:10,background:'#2563eb',color:'white',fontWeight:'bold',borderRadius:3,fontSize:'5px',lineHeight:1,padding:'1px 2px',whiteSpace:'nowrap'}}>{badge}</span>}
+      <Ic n="Store" size={iconSz} cls="text-blue-400"/>
+    </div>
+  );
+};
+
+/* ── SlideToPayButton ── */
+const SlideToPayButton = ({ onComplete }) => {
+  const [dragging, setDragging] = useState(false);
+  const [pos, setPos] = useState(0);
+  const startX = useRef(0);
+  const THUMB=44, TRACK_W=220, MAX=TRACK_W-THUMB;
+  const onStart = cx => { setDragging(true); startX.current = cx - pos; };
+  const onMove = cx => {
+    if (!dragging) return;
+    const next = Math.max(0, Math.min(MAX, cx - startX.current));
+    setPos(next);
+    if (next >= MAX-4) { setDragging(false); setPos(MAX); setTimeout(()=>{ setPos(0); onComplete(); },200); }
+  };
+  const onEnd = () => { if (dragging) { setDragging(false); setPos(0); } };
+  return (
+    <div style={{position:'relative',display:'flex',alignItems:'center',borderRadius:12,overflow:'hidden',userSelect:'none',width:TRACK_W,height:48,background:'#1a1a2e'}}
+      onMouseMove={e=>onMove(e.clientX)} onMouseUp={onEnd} onMouseLeave={onEnd}
+      onTouchMove={e=>onMove(e.touches[0].clientX)} onTouchEnd={onEnd}>
+      <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',gap:6,pointerEvents:'none'}}>
+        <span style={{fontSize:11,fontWeight:'bold',color:'#a78bfa',marginLeft:40}}>G</span>
+        <span style={{fontSize:11,fontWeight:'bold',color:'white'}}>슬라이드 GripPay 결제</span>
+      </div>
+      <div style={{position:'absolute',top:4,bottom:4,width:THUMB,left:4+pos,background:'linear-gradient(135deg,#7c3aed,#4f46e5)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',cursor:'grab',zIndex:10,transition:dragging?'none':'left 0.2s'}}
+        onMouseDown={e=>onStart(e.clientX)} onTouchStart={e=>onStart(e.touches[0].clientX)}>
+        <Ic n="ChevronRight" size={18} cls="text-white"/>
+      </div>
+    </div>
+  );
+};
+
+/* ── PayCompleteModal ── */
+const PayCompleteModal = ({ orders, onClose }) => {
+  const total = orders.reduce((s,o)=>s+o.totalPrice,0);
+  const count = orders.reduce((s,o)=>s+o.quantity,0);
+  const first = orders[0]||null;
+  return (
+    <div style={{width:'100%'}}>
+      <div style={{background:'white',borderRadius:'24px 24px 0 0',padding:'24px 20px 20px',display:'flex',flexDirection:'column',alignItems:'center',boxShadow:'0 -10px 40px rgba(0,0,0,0.2)'}}>
+        <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#7c3aed,#4f46e5)',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}>
+          <Ic n="Check" size={28} cls="text-white" sw={3}/>
+        </div>
+        <h2 style={{fontSize:15,fontWeight:900,color:'#111',marginBottom:4}}>결제가 완료되었습니다!</h2>
+        <p style={{fontSize:10,color:'#9ca3af',marginBottom:16}}>GripPay로 빠르고 간편하게 구매했어요.</p>
+        {first ? (
+          <div style={{width:'100%',background:'#f9fafb',borderRadius:12,padding:12,display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+            <ProductImg size="md"/>
+            <div style={{flexGrow:1,minWidth:0}}>
+              <p style={{fontSize:10,fontWeight:'bold',color:'#374151',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{orders.length===1?first.productName:`${first.productName} 외 ${orders.length-1}개`}</p>
+              {first.option && <p style={{fontSize:8,color:'#9ca3af',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{first.option}</p>}
+              <p style={{fontSize:12,fontWeight:900,color:'#111',marginTop:2}}>{total.toLocaleString()}원 ({count}개)</p>
+            </div>
+          </div>
+        ) : (
+          <div style={{width:'100%',background:'#f9fafb',borderRadius:12,padding:12,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16}}>
+            <p style={{fontSize:10,color:'#9ca3af'}}>결제가 완료되었습니다.</p>
+          </div>
+        )}
+        <button onClick={onClose} style={{width:'100%',padding:'12px 0',borderRadius:12,fontWeight:'bold',color:'white',fontSize:14,border:'none',cursor:'pointer',background:'linear-gradient(135deg,#7c3aed,#4f46e5)'}}>확인</button>
+      </div>
+    </div>
+  );
+};
+
+/* ══════════════════════════════════
+   BroadcastSimulation
+══════════════════════════════════ */
+const BroadcastSimulation = () => {
+  const [activeProductId, setActiveProductId] = useState(4);
+  const [upOptionText, setUpOptionText] = useState("");
+  const [currentStock, setCurrentStock] = useState(100);
+  const [productStatuses, setProductStatuses] = useState({4:"판매중",1:"판매예정",2:"품절",3:"판매예정",5:"판매예정",6:"판매예정"});
+  const [storeOnProducts, setStoreOnProducts] = useState({4:false,1:false,2:false,3:false,5:false,6:false});
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isProductListOpen, setIsProductListOpen] = useState(false);
+  const [customerTab, setCustomerTab] = useState("products");
+  const [selectedOption1, setSelectedOption1] = useState("");
+  const [selectedColor, setSelectedColor] = useState("블랙");
+  const [selectedSize, setSelectedSize] = useState("250");
+  const [selectedMaterial, setSelectedMaterial] = useState("코튼");
+  const [selectedPattern, setSelectedPattern] = useState("무지");
+  const [selectedPackage, setSelectedPackage] = useState("일반포장");
+  const [quantity, setQuantity] = useState(1);
+  const [orders, setOrders] = useState([]);
+  const [showOrderToast, setShowOrderToast] = useState(false);
+  const [showPayComplete, setShowPayComplete] = useState(false);
+  const [showPayPage, setShowPayPage] = useState(false);
+  const [detailProduct, setDetailProduct] = useState(null);
+  const [isSellerManagementOpen, setIsSellerManagementOpen] = useState(false);
+  const [isSellerOptionPopupOpen, setIsSellerOptionPopupOpen] = useState(false);
+  const [sellerTargetProductId, setSellerTargetProductId] = useState(null);
+  const [sellerSelectedOptionIdx, setSellerSelectedOptionIdx] = useState(0);
+
+  const products = [
+    {id:4,name:"옵션 없는 상품",price:15000,depth:0,options:[{name:"단일 상품",stock:100}]},
+    {id:1,name:"1단계 옵션 상품",price:22000,depth:1,options:[{name:"고구마맛탕 (40개)",stock:20},{name:"깻잎맛탕 (40개)",stock:0},{name:"새우맛탕 (20개)",stock:25}]},
+    {id:2,name:"2단계 옵션 상품",price:23000,depth:2,colors:["블랙","화이트","베이지"],sizes:["230","240","250"]},
+    {id:3,name:"3단계 옵션 상품",price:25000,depth:3,colors:["레이지","브라운"],sizes:["S","M"],materials:["코튼","린넨"]},
+    {id:5,name:"4단계 옵션 상품",price:28000,depth:4,colors:["네이비","그레이"],sizes:["95","100"],materials:["화리","울"],patterns:["무지","스트라이프"]},
+    {id:6,name:"5단계 옵션 상품",price:32000,depth:5,colors:["레드","블루"],sizes:["FREE"],materials:["캐시미어"],patterns:["체크"],packages:["일반포장","선물포장"]},
+  ];
+
+  const generateOptions = (productId) => {
+    const prod = products.find(p=>p.id===productId);
+    if (!prod) return [];
+    let raw = [];
+    if (prod.depth===0||prod.depth===1) raw=[...prod.options];
+    else if (prod.depth===2) prod.colors.forEach(c=>prod.sizes.forEach(s=>raw.push({name:`${c} / ${s}`,stock:(c==="화이트"&&s==="240")?0:15,color:c,size:s})));
+    else if (prod.depth===3) prod.colors.forEach(c=>prod.sizes.forEach(s=>prod.materials.forEach(m=>raw.push({name:`${c} / ${s} / ${m}`,stock:10,color:c,size:s,material:m}))));
+    else if (prod.depth===4) prod.colors.forEach(c=>prod.sizes.forEach(s=>prod.materials.forEach(m=>prod.patterns.forEach(p=>raw.push({name:`${c} / ${s} / ${m} / ${p}`,stock:8,color:c,size:s,material:m,pattern:p})))));
+    else if (prod.depth===5) prod.colors.forEach(c=>prod.sizes.forEach(s=>prod.materials.forEach(m=>prod.patterns.forEach(p=>prod.packages.forEach(pkg=>raw.push({name:`${c} / ${s} / ${m} / ${p} / ${pkg}`,stock:5,color:c,size:s,material:m,pattern:p,package:pkg}))))));
+    return raw.sort((a,b)=>(a.stock<1&&b.stock>=1)?1:(a.stock>=1&&b.stock<1)?-1:0);
+  };
+
+  const currentSellerOptions = useMemo(()=>generateOptions(sellerTargetProductId),[sellerTargetProductId]);
+  const activeProduct = products.find(p=>p.id===activeProductId);
+  const totalPrice = activeProduct ? activeProduct.price*quantity : 0;
+
+  const getOptionLabel = (prod) => {
+    if (!prod) return "";
+    if (prod.depth===0) return prod.name;
+    if (prod.depth===1) return selectedOption1;
+    if (prod.depth===2) return `${selectedColor} / ${selectedSize}`;
+    if (prod.depth===3) return `${selectedColor} / ${selectedSize} / ${selectedMaterial}`;
+    if (prod.depth===4) return `${selectedColor} / ${selectedSize} / ${selectedMaterial} / ${selectedPattern}`;
+    if (prod.depth===5) return `${selectedColor} / ${selectedSize} / ${selectedMaterial} / ${selectedPattern} / ${selectedPackage}`;
+    return "";
+  };
+
+  const handlePurchaseByCustomer = (id) => {
+    const prod = products.find(p=>p.id===id);
+    setActiveProductId(id); setQuantity(1);
+    const opts = generateOptions(id);
+    const first = opts.find(o=>o.stock>0)||opts[0];
+    setUpOptionText(prod.depth===0?"":first.name);
+    setCurrentStock(first.stock);
+    if (prod.depth===1) setSelectedOption1(opts.find(o=>o.stock>0)?.name||"");
+    else if (prod.depth>=2) {
+      setSelectedColor(first.color||prod.colors?.[0]||"");
+      setSelectedSize(first.size||prod.sizes?.[0]||"");
+      if (prod.depth>=3) setSelectedMaterial(first.material||prod.materials?.[0]||"");
+      if (prod.depth>=4) setSelectedPattern(first.pattern||prod.patterns?.[0]||"");
+      if (prod.depth>=5) setSelectedPackage(first.package||prod.packages?.[0]||"");
+    }
+    setIsProductListOpen(false); setIsPopupOpen(true);
+  };
+
+  const handleOrder = () => {
+    if (!activeProduct) return;
+    const newOrder = {
+      id:Date.now(), productId:activeProduct.id, productName:activeProduct.name,
+      option:activeProduct.depth===0?"":getOptionLabel(activeProduct),
+      quantity, price:activeProduct.price, totalPrice:activeProduct.price*quantity,
+      orderedAt:new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"}),
+      badge:"한정판매", hasCoupon:false,
+    };
+    setOrders(prev=>[newOrder,...prev]);
+    setIsPopupOpen(false); setShowOrderToast(true);
+    setTimeout(()=>{ setShowOrderToast(false); setCustomerTab("order"); setIsProductListOpen(true); },800);
+  };
+
+  const updateOrderQty = (id,d) => setOrders(prev=>prev.map(o=>o.id===id?{...o,quantity:Math.max(1,o.quantity+d),totalPrice:o.price*Math.max(1,o.quantity+d)}:o));
+  const removeOrder = (id) => setOrders(prev=>prev.filter(o=>o.id!==id));
+
+  const openSellerOptionPopup = (id) => {
+    const prod = products.find(p=>p.id===id);
+    if (prod.depth===0) { setActiveProductId(id); setUpOptionText(""); setQuantity(1); setCurrentStock(prod.options[0].stock); return; }
+    const opts = generateOptions(id);
+    const maxIdx = opts.reduce((mi,c,i,a)=>(c.stock>a[mi].stock?i:mi),0);
+    setSellerTargetProductId(id); setSellerSelectedOptionIdx(maxIdx); setIsSellerOptionPopupOpen(true);
+  };
+
+  const handleSellerUpExecute = () => {
+    const combo = currentSellerOptions[sellerSelectedOptionIdx];
+    setActiveProductId(sellerTargetProductId); setQuantity(1);
+    setUpOptionText(combo.name); setCurrentStock(combo.stock);
+    const prod = products.find(p=>p.id===sellerTargetProductId);
+    if (prod.depth===1) setSelectedOption1(combo.name);
+    else {
+      if (combo.color) setSelectedColor(combo.color);
+      if (combo.size) setSelectedSize(combo.size);
+      if (combo.material) setSelectedMaterial(combo.material);
+      if (combo.pattern) setSelectedPattern(combo.pattern);
+      if (combo.package) setSelectedPackage(combo.package);
+    }
+    setIsSellerOptionPopupOpen(false);
+  };
+
+  const handleDown = (id) => { if (activeProductId===id) { setActiveProductId(null); setUpOptionText(""); } };
+  const updateStatus = (id,s) => setProductStatuses(prev=>({...prev,[id]:s}));
+  const toggleStoreOn = (id) => setStoreOnProducts(prev=>({...prev,[id]:!prev[id]}));
+  const visibleCustomerProducts = products.filter(p=>storeOnProducts[p.id]);
+
+  const orderSubtotal = orders.reduce((s,o)=>s+o.totalPrice,0);
+  const couponDiscount = 2000;
+  const shippingFee = orders.length>0?3000:0;
+  const orderTotal = orderSubtotal - couponDiscount + shippingFee;
+
+  const mobileStyle = {width:280,height:580,position:'relative',background:'#000',borderRadius:44,boxShadow:'0 25px 50px rgba(0,0,0,0.5)',overflow:'hidden',border:'12px solid #1f2937'};
+
+  /* ─ 옵션 선택 버튼 공통 ─ */
+  const OptBtn = ({val,selected,onClick,disabled}) => (
+    <button onClick={()=>!disabled&&onClick(val)} style={{padding:'4px 8px',borderRadius:6,fontSize:9,fontWeight:600,border:`1px solid ${disabled?'#e5e7eb':selected?'#6366f1':'#e5e7eb'}`,color:disabled?'#d1d5db':selected?'#4f46e5':'#374151',background:selected?'#eef2ff':disabled?'#f9fafb':'white',cursor:disabled?'not-allowed':'pointer'}}>{val}</button>
+  );
+
+  return (
+    <div style={{padding:16,background:'#f3f4f6',minHeight:'calc(100vh - 60px)'}}>
+      <div style={{textAlign:'center',marginBottom:16}}>
+        <h2 style={{fontSize:18,fontWeight:'bold',color:'#1f2937',marginBottom:4}}>📺 라이브 방송 시뮬레이션</h2>
+        <p style={{color:'#6b7280',fontSize:12}}>고객 화면과 셀러 화면을 동시에 확인</p>
+      </div>
+      <div style={{display:'flex',gap:24,justifyContent:'center',alignItems:'flex-start',flexWrap:'wrap'}}>
+
+        {/* ── 고객뷰 ── */}
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
+          <div style={{marginBottom:8,display:'inline-flex',alignItems:'center',gap:6,background:'#dcfce7',color:'#15803d',padding:'4px 12px',borderRadius:999,fontSize:12,fontWeight:'bold'}}>
+            <Ic n="Eye" size={12}/> 고객뷰
+          </div>
+          <div style={mobileStyle}>
+            {/* status bar */}
+            <div style={{position:'absolute',top:0,width:'100%',height:32,display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0 20px',zIndex:20,color:'white',fontSize:10}}>
+              <span>8:06</span><div style={{opacity:.5}}>|||</div>
+            </div>
+            {/* bg */}
+            <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,#581c87,#111827,#000)'}}>
+              <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:60,opacity:.3}}>🎪</div>
+            </div>
+            {/* host */}
+            <div style={{position:'absolute',top:36,left:0,width:'100%',padding:'0 12px',zIndex:10,display:'flex',justifyContent:'space-between',alignItems:'flex-start',color:'white'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <div style={{width:32,height:32,borderRadius:'50%',border:'2px solid #ec4899',background:'linear-gradient(135deg,#f472b6,#ef4444)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14}}>👩</div>
+                <div><div style={{fontWeight:'bold',fontSize:11}}>꽃꽃언니 🎀</div><div style={{fontSize:9,opacity:.8}}>❤️ 5만  🔥 723</div></div>
+              </div>
+              <div style={{display:'flex',gap:8}}><Ic n="Share2" size={14}/><Ic n="X" size={14}/></div>
+            </div>
+
+            {/* order toast */}
+            {showOrderToast && (
+              <div style={{position:'absolute',bottom:80,left:0,width:'100%',padding:'0 12px',zIndex:20}}>
+                <div style={{background:'white',borderRadius:12,boxShadow:'0 10px 25px rgba(0,0,0,0.15)',border:'1px solid #f3f4f6',padding:'10px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8}}>
+                    <div style={{width:28,height:28,background:'#e0f2fe',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center'}}><Ic n="Store" size={13} cls="text-blue-400"/></div>
+                    <p style={{fontSize:10,color:'#374151'}}>라이브 주문서에 상품이 담겼습니다.</p>
+                  </div>
+                  <button onClick={()=>{setShowOrderToast(false);setCustomerTab("order");setIsProductListOpen(true);}}
+                    style={{border:'1px dashed #f472b6',color:'#ec4899',fontSize:9,fontWeight:'bold',padding:'4px 8px',borderRadius:8,whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:2,background:'none',cursor:'pointer'}}>
+                    바로가기 <Ic n="ChevronRight" size={10}/>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* active product banner */}
+            {activeProduct && (()=>{
+              const st = productStatuses[activeProduct.id];
+              return (
+                <div style={{position:'absolute',bottom:80,left:0,width:'100%',padding:'0 12px',zIndex:10}}>
+                  <div style={{position:'relative',background:'white',borderRadius:8,display:'flex',alignItems:'stretch',boxShadow:'0 4px 12px rgba(0,0,0,0.15)',overflow:'hidden'}}>
+                    <div style={{position:'absolute',top:0,left:0,background:'#2563eb',color:'white',fontWeight:'bold',borderRadius:'0 0 4px 0',zIndex:10,fontSize:5,lineHeight:1,padding:'1px 2px',whiteSpace:'nowrap'}}>한정상품</div>
+                    <div style={{width:48,background:'#e0f2fe',display:'flex',alignItems:'center',justifyContent:'center'}}><Ic n="Store" size={18} cls="text-blue-400"/></div>
+                    <div style={{flexGrow:1,padding:'0 8px',display:'flex',flexDirection:'column',justifyContent:'center',minWidth:0,height:52}}>
+                      <h3 style={{fontSize:10,fontWeight:'bold',color:'#1f2937',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{activeProduct.name}</h3>
+                      {activeProduct.depth!==0&&upOptionText&&<p style={{fontSize:8,color:'#6b7280',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{upOptionText}</p>}
+                      <span style={{fontSize:11,fontWeight:'bold',marginTop:2,color:st==="판매예정"?'transparent':'#111'}}>{activeProduct.price.toLocaleString()}원</span>
+                    </div>
+                    <div style={{display:'flex',alignItems:'center',paddingRight:8}}>
+                      {st==="판매예정"&&<button disabled style={{background:'#d1d5db',color:'white',fontWeight:'bold',padding:'6px 10px',borderRadius:4,fontSize:9,border:'none',cursor:'not-allowed'}}>예정</button>}
+                      {st==="판매중"&&<button onClick={()=>{if(activeProduct.depth>=2){setSelectedColor(activeProduct.colors?.[0]||"");setSelectedSize(activeProduct.sizes?.[0]||"");}if(activeProduct.depth>=3)setSelectedMaterial(activeProduct.materials?.[0]||"");if(activeProduct.depth>=4)setSelectedPattern(activeProduct.patterns?.[0]||"");if(activeProduct.depth>=5)setSelectedPackage(activeProduct.packages?.[0]||"");setIsPopupOpen(true);}} style={{background:'#ef4444',color:'white',fontWeight:'bold',padding:'6px 10px',borderRadius:4,fontSize:10,border:'none',cursor:'pointer'}}>주문</button>}
+                      {st==="품절"&&<button disabled style={{background:'#9ca3af',color:'white',fontWeight:'bold',padding:'6px 10px',borderRadius:4,fontSize:9,border:'none',cursor:'not-allowed'}}>품절</button>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* bottom bar */}
+            <div style={{position:'absolute',bottom:0,width:'100%',padding:'8px 8px 16px',zIndex:10,display:'flex',alignItems:'flex-end',gap:6,color:'white',background:'linear-gradient(to top,rgba(0,0,0,0.7),transparent)'}}>
+              <div onClick={()=>setIsProductListOpen(true)} style={{position:'relative',width:36,height:36,background:'rgba(255,255,255,0.2)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',border:'1px solid rgba(255,255,255,0.3)'}}>
+                <Ic n="ShoppingBag" size={16}/>
+                <span style={{position:'absolute',top:-4,right:-4,background:'#ef4444',fontSize:8,width:14,height:14,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:'bold'}}>{visibleCustomerProducts.length}</span>
+              </div>
+              <div style={{flexGrow:1,background:'rgba(0,0,0,0.4)',color:'rgba(255,255,255,0.7)',fontSize:10,borderRadius:999,padding:'8px 12px',border:'1px solid rgba(255,255,255,0.2)'}}>메시지 입력</div>
+              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                {[['Gift','선물'],['Ticket','쿠폰'],['Heart','좋아요']].map(([n,l])=>(
+                  <div key={n} style={{display:'flex',flexDirection:'column',alignItems:'center'}}><Ic n={n} size={16}/><span style={{fontSize:8}}>{l}</span></div>
+                ))}
+              </div>
+            </div>
+
+            {/* product list sheet */}
+            {isProductListOpen&&(
+              <>
+                <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',zIndex:40}} onClick={()=>setIsProductListOpen(false)}/>
+                <div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:50,background:'white',borderRadius:'16px 16px 0 0',display:'flex',flexDirection:'column',height:'82%'}}>
+                  <div style={{display:'flex',alignItems:'center',borderBottom:'1px solid #e5e7eb',flexShrink:0}}>
+                    {[["products",`판매상품 ${visibleCustomerProducts.length}`],["order",`라이브 주문서 ${orders.length}`]].map(([tab,label])=>(
+                      <button key={tab} onClick={()=>setCustomerTab(tab)} style={{flex:1,padding:'10px 0',fontSize:11,fontWeight:'bold',position:'relative',color:customerTab===tab?'#111':'#9ca3af',background:'none',border:'none',cursor:'pointer'}}>
+                        {label}
+                        {customerTab===tab&&<div style={{position:'absolute',bottom:0,left:0,width:'100%',height:2,background:'#111'}}/>}
+                      </button>
+                    ))}
+                    <button onClick={()=>setIsProductListOpen(false)} style={{padding:'0 12px',color:'#9ca3af',background:'none',border:'none',cursor:'pointer'}}><Ic n="X" size={15}/></button>
+                  </div>
+                  {customerTab==="products"?(
+                    <div style={{flexGrow:1,overflowY:'auto',padding:12,display:'flex',flexDirection:'column',gap:8}}>
+                      {visibleCustomerProducts.length>0?visibleCustomerProducts.map(prod=>(
+                        <div key={prod.id} style={{display:'flex',alignItems:'center',gap:8,padding:8,borderRadius:8,border:'1px solid #f3f4f6'}}>
+                          <div onClick={()=>setDetailProduct(prod)} style={{cursor:'pointer'}}><ProductImg size="md"/></div>
+                          <div style={{flexGrow:1,minWidth:0,cursor:'pointer'}} onClick={()=>setDetailProduct(prod)}>
+                            <h4 style={{fontWeight:'bold',fontSize:10,color:'#1f2937',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{prod.name}</h4>
+                            <p style={{fontWeight:900,fontSize:11}}>{prod.price.toLocaleString()}원</p>
+                          </div>
+                          <button onClick={()=>handlePurchaseByCustomer(prod.id)} style={{display:'flex',alignItems:'center',gap:4,background:'#ec4899',color:'white',fontSize:9,fontWeight:'bold',padding:'6px 8px',borderRadius:6,border:'none',cursor:'pointer',flexShrink:0}}>
+                            <Ic n="ShoppingBag" size={10}/> 구매
+                          </button>
+                        </div>
+                      )):(
+                        <div style={{textAlign:'center',padding:'40px 0',color:'#9ca3af'}}>
+                          <Ic n="ShoppingBag" size={32} style={{margin:'0 auto 8px',opacity:.3}}/><p style={{fontSize:10}}>등록된 상품 없음</p>
+                        </div>
+                      )}
+                    </div>
+                  ):(
+                    <div style={{display:'flex',flexDirection:'column',flexGrow:1,overflow:'hidden'}}>
+                      <div style={{padding:'8px 12px',flexShrink:0}}>
+                        <p style={{fontSize:10,color:'#6b7280',textAlign:'center'}}>주문서에 담긴 상품을 빠르게 구매하세요!</p>
+                      </div>
+                      <div style={{flexGrow:1,overflowY:'auto',padding:'0 12px',display:'flex',flexDirection:'column',gap:8,paddingBottom:4}}>
+                        {orders.length===0?(
+                          <div style={{textAlign:'center',padding:'40px 0',color:'#9ca3af'}}><Ic n="ShoppingBag" size={32} style={{margin:'0 auto 8px',opacity:.3}}/><p style={{fontSize:10}}>주문 내역 없음</p></div>
+                        ):orders.map(order=>(
+                          <div key={order.id} style={{background:'white',border:'1px solid #f3f4f6',borderRadius:12,padding:10,position:'relative'}}>
+                            <button onClick={()=>removeOrder(order.id)} style={{position:'absolute',top:8,right:8,color:'#d1d5db',background:'none',border:'none',cursor:'pointer'}}><Ic n="X" size={12}/></button>
+                            <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
+                              <ProductImg size="lg" badge={order.badge}/>
+                              <div style={{flexGrow:1,minWidth:0,paddingRight:16}}>
+                                <p style={{fontSize:10,fontWeight:'bold',color:'#1f2937',lineHeight:1.3}}>{order.productName}</p>
+                                {order.option&&<p style={{fontSize:8,color:'#9ca3af',marginTop:2}}>옵션: {order.option}</p>}
+                                <span style={{fontSize:11,fontWeight:900,color:'#111',marginTop:4,display:'block'}}>{order.price.toLocaleString()}원</span>
+                              </div>
+                            </div>
+                            <div style={{display:'flex',justifyContent:'flex-end',marginTop:6}}>
+                              <div style={{display:'flex',alignItems:'center',border:'1px solid #e5e7eb',borderRadius:8,overflow:'hidden'}}>
+                                <button onClick={()=>updateOrderQty(order.id,-1)} style={{padding:'4px 8px',color:'#9ca3af',background:'none',border:'none',cursor:'pointer'}}><Ic n="Minus" size={10}/></button>
+                                <span style={{padding:'0 8px',fontSize:11,fontWeight:'bold',color:'#1f2937'}}>{order.quantity}</span>
+                                <button onClick={()=>updateOrderQty(order.id,1)} style={{padding:'4px 8px',color:'#374151',background:'none',border:'none',cursor:'pointer'}}><Ic n="Plus" size={10}/></button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {orders.length>0&&(
+                        <div style={{flexShrink:0,borderTop:'1px solid #e5e7eb',background:'white',padding:'8px 12px',display:'flex',flexDirection:'column',gap:4}}>
+                          <div style={{display:'flex',justifyContent:'space-between',fontSize:10}}><span style={{color:'#6b7280'}}>총 주문금액</span><span style={{fontWeight:'bold'}}>{orderSubtotal.toLocaleString()}원</span></div>
+                          <div style={{display:'flex',justifyContent:'space-between',fontSize:10}}>
+                            <span style={{color:'#6b7280',display:'flex',alignItems:'center',gap:4}}>쿠폰 할인 <span style={{background:'#f3f4f6',color:'#6b7280',fontSize:7,padding:'1px 4px',borderRadius:3}}>쿠폰 1장 적용</span></span>
+                            <span style={{fontWeight:'bold',color:'#3b82f6'}}>-{couponDiscount.toLocaleString()}원</span>
+                          </div>
+                          <div style={{display:'flex',justifyContent:'space-between',fontSize:10}}><span style={{color:'#6b7280'}}>배송비</span><span style={{fontWeight:'bold'}}>{shippingFee.toLocaleString()}원</span></div>
+                          <div style={{display:'flex',justifyContent:'space-between',fontSize:10,paddingTop:4,borderTop:'1px solid #e5e7eb'}}>
+                            <span style={{fontWeight:'bold',color:'#1f2937'}}>총 결제금액</span>
+                            <span style={{fontWeight:900,color:'#ef4444',fontSize:12}}>{orderTotal.toLocaleString()}원</span>
+                          </div>
+                          <button onClick={()=>{setIsProductListOpen(false);setShowPayPage(true);}} style={{width:'100%',marginTop:4,background:'#ec4899',color:'white',fontWeight:'bold',padding:'10px',borderRadius:12,fontSize:11,border:'none',cursor:'pointer'}}>
+                            {orders.length}개 {orderTotal.toLocaleString()}원 결제하기
+                          </button>
+                          <div style={{display:'flex',justifyContent:'center',paddingTop:4,paddingBottom:2}}>
+                            <SlideToPayButton onComplete={()=>{setIsProductListOpen(false);setIsPopupOpen(false);setShowOrderToast(false);setShowPayComplete(true);}}/>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* detail sheet */}
+            {detailProduct&&(
+              <>
+                <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',zIndex:50}} onClick={()=>setDetailProduct(null)}/>
+                <div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:50,background:'white',borderRadius:'16px 16px 0 0',display:'flex',flexDirection:'column',maxHeight:'85%'}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:12,borderBottom:'1px solid #e5e7eb',flexShrink:0}}>
+                    <h2 style={{fontWeight:'bold',fontSize:12}}>상품 상세</h2>
+                    <button onClick={()=>setDetailProduct(null)} style={{color:'#9ca3af',background:'none',border:'none',cursor:'pointer'}}><Ic n="X" size={16}/></button>
+                  </div>
+                  <div style={{overflowY:'auto',flexGrow:1,padding:12}}>
+                    <div style={{width:'100%',height:64,background:'#e0f2fe',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:8}}><Ic n="Store" size={28} cls="text-blue-300"/></div>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+                      <h3 style={{fontWeight:'bold',fontSize:11,color:'#111',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',paddingRight:8}}>{detailProduct.name}</h3>
+                      <span style={{fontWeight:900,fontSize:13,color:'#111',flexShrink:0}}>{detailProduct.price.toLocaleString()}원</span>
+                    </div>
+                    {detailProduct.depth===1&&(
+                      <div style={{marginBottom:8}}>
+                        <h4 style={{fontSize:9,fontWeight:900,color:'#374151',marginBottom:6}}>옵션 선택</h4>
+                        <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                          {detailProduct.options.map(opt=>(
+                            <span key={opt.name} style={{padding:'6px 10px',borderRadius:8,fontSize:9,fontWeight:'bold',border:`2px solid ${opt.stock<1?'#f3f4f6':'#f9a8d4'}`,color:opt.stock<1?'#d1d5db':'#db2777',background:opt.stock<1?'#f9fafb':'#fdf2f8'}}>
+                              {opt.name}{opt.stock<1?" (품절)":""}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {detailProduct.depth>=2&&(
+                      <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:8}}>
+                        {[['컬러','colors','#f9a8d4','#fdf2f8','#db2777'],['사이즈','sizes','#a5b4fc','#eef2ff','#4f46e5']].map(([label,key,bc,bg,tc])=>detailProduct[key]&&(
+                          <div key={label}>
+                            <h4 style={{fontSize:9,fontWeight:900,color:'#374151',marginBottom:6}}>{label}</h4>
+                            <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                              {detailProduct[key].map(v=><span key={v} style={{padding:'6px 10px',borderRadius:8,fontSize:9,fontWeight:'bold',border:`2px solid ${bc}`,color:tc,background:bg}}>{v}</span>)}
+                            </div>
+                          </div>
+                        ))}
+                        {detailProduct.depth>=3&&detailProduct.materials&&(
+                          <div><h4 style={{fontSize:9,fontWeight:900,color:'#374151',marginBottom:6}}>소재</h4><div style={{display:'flex',flexWrap:'wrap',gap:6}}>{detailProduct.materials.map(m=><span key={m} style={{padding:'6px 10px',borderRadius:8,fontSize:9,fontWeight:'bold',border:'2px solid #6ee7b7',color:'#059669',background:'#ecfdf5'}}>{m}</span>)}</div></div>
+                        )}
+                        {detailProduct.depth>=4&&detailProduct.patterns&&(
+                          <div><h4 style={{fontSize:9,fontWeight:900,color:'#374151',marginBottom:6}}>패턴</h4><div style={{display:'flex',flexWrap:'wrap',gap:6}}>{detailProduct.patterns.map(p=><span key={p} style={{padding:'6px 10px',borderRadius:8,fontSize:9,fontWeight:'bold',border:'2px solid #fdba74',color:'#ea580c',background:'#fff7ed'}}>{p}</span>)}</div></div>
+                        )}
+                        {detailProduct.depth>=5&&detailProduct.packages&&(
+                          <div><h4 style={{fontSize:9,fontWeight:900,color:'#374151',marginBottom:6}}>패키지</h4><div style={{display:'flex',flexWrap:'wrap',gap:6}}>{detailProduct.packages.map(p=><span key={p} style={{padding:'6px 10px',borderRadius:8,fontSize:9,fontWeight:'bold',border:'2px solid #c4b5fd',color:'#7c3aed',background:'#f5f3ff'}}>{p}</span>)}</div></div>
+                        )}
+                      </div>
+                    )}
+                    <div style={{background:'#f9fafb',borderRadius:12,padding:10,display:'flex',flexDirection:'column',gap:4,fontSize:10,marginTop:8}}>
+                      {[['배송방법','일반배송'],['배송비','3,000원']].map(([k,v])=>(
+                        <div key={k} style={{display:'flex',justifyContent:'space-between'}}><span style={{color:'#9ca3af'}}>{k}</span><span style={{fontWeight:500}}>{v}</span></div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{padding:12,borderTop:'1px solid #e5e7eb',flexShrink:0}}>
+                    <button onClick={()=>{setDetailProduct(null);handlePurchaseByCustomer(detailProduct.id);}} style={{width:'100%',padding:10,borderRadius:12,background:'#ec4899',color:'white',fontSize:11,fontWeight:'bold',border:'none',cursor:'pointer'}}>구매하기</button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* purchase popup */}
+            {isPopupOpen&&activeProduct&&(
+              <>
+                <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',zIndex:40}} onClick={()=>setIsPopupOpen(false)}/>
+                <div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:50,background:'white',borderRadius:'16px 16px 0 0',display:'flex',flexDirection:'column',maxHeight:'88%'}}>
+                  <div style={{padding:12,overflowY:'auto',flexGrow:1}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                        <ProductImg size="md"/>
+                        <div><h2 style={{fontWeight:'bold',fontSize:12}}>{activeProduct.name}</h2><div style={{fontWeight:'bold',fontSize:14}}>{activeProduct.price.toLocaleString()}원</div></div>
+                      </div>
+                      <button onClick={()=>setIsPopupOpen(false)} style={{color:'#9ca3af',background:'none',border:'none',cursor:'pointer'}}><Ic n="X" size={16}/></button>
+                    </div>
+                    {/* depth 1 */}
+                    {activeProduct.depth===1&&(
+                      <div style={{marginBottom:12}}>
+                        <h3 style={{fontSize:9,fontWeight:'bold',color:'#9ca3af',marginBottom:6}}>옵션</h3>
+                        <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                          {activeProduct.options.map(opt=>(
+                            <button key={opt.name} onClick={()=>opt.stock>=1&&setSelectedOption1(opt.name)}
+                              style={{padding:'4px 8px',borderRadius:6,fontSize:9,fontWeight:600,border:`1px solid ${opt.stock<1?'#e5e7eb':selectedOption1===opt.name?'#ec4899':'#e5e7eb'}`,color:opt.stock<1?'#d1d5db':selectedOption1===opt.name?'#db2777':'#374151',background:selectedOption1===opt.name?'#fdf2f8':'white',cursor:opt.stock<1?'not-allowed':'pointer'}}>
+                              {opt.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {/* depth >= 2 */}
+                    {activeProduct.depth>=2&&(
+                      <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:12}}>
+                        <div><h3 style={{fontSize:9,fontWeight:'bold',color:'#9ca3af',marginBottom:6}}>컬러</h3><div style={{display:'flex',flexWrap:'wrap',gap:6}}>{activeProduct.colors.map(c=><OptBtn key={c} val={c} selected={selectedColor===c} onClick={setSelectedColor}/>)}</div></div>
+                        <div><h3 style={{fontSize:9,fontWeight:'bold',color:'#9ca3af',marginBottom:6}}>사이즈</h3><div style={{display:'flex',flexWrap:'wrap',gap:6}}>{activeProduct.sizes.map(s=><OptBtn key={s} val={s} selected={selectedSize===s} onClick={setSelectedSize}/>)}</div></div>
+                        {activeProduct.depth>=3&&<div><h3 style={{fontSize:9,fontWeight:'bold',color:'#9ca3af',marginBottom:6}}>소재</h3><div style={{display:'flex',flexWrap:'wrap',gap:6}}>{activeProduct.materials.map(m=><OptBtn key={m} val={m} selected={selectedMaterial===m} onClick={setSelectedMaterial}/>)}</div></div>}
+                        {activeProduct.depth>=4&&<div><h3 style={{fontSize:9,fontWeight:'bold',color:'#9ca3af',marginBottom:6}}>패턴</h3><div style={{display:'flex',flexWrap:'wrap',gap:6}}>{activeProduct.patterns.map(p=><OptBtn key={p} val={p} selected={selectedPattern===p} onClick={setSelectedPattern}/>)}</div></div>}
+                        {activeProduct.depth>=5&&<div><h3 style={{fontSize:9,fontWeight:'bold',color:'#9ca3af',marginBottom:6}}>패키지</h3><div style={{display:'flex',flexWrap:'wrap',gap:6}}>{activeProduct.packages.map(p=><OptBtn key={p} val={p} selected={selectedPackage===p} onClick={setSelectedPackage}/>)}</div></div>}
+                      </div>
+                    )}
+                    <div style={{background:'#f9fafb',borderRadius:8,padding:10,marginBottom:12,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                      <span style={{fontSize:10,color:'#4b5563',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',paddingRight:8}}>{getOptionLabel(activeProduct)}</span>
+                      <div style={{display:'flex',alignItems:'center',gap:4,border:'1px solid #e5e7eb',borderRadius:6,background:'white',flexShrink:0}}>
+                        <button onClick={()=>setQuantity(Math.max(1,quantity-1))} style={{padding:'4px 8px',color:'#9ca3af',background:'none',border:'none',cursor:'pointer'}}><Ic n="Minus" size={12}/></button>
+                        <span style={{padding:'0 6px',fontWeight:'bold',fontSize:11}}>{quantity}</span>
+                        <button onClick={()=>setQuantity(quantity+1)} style={{padding:'4px 8px',color:'#374151',background:'none',border:'none',cursor:'pointer'}}><Ic n="Plus" size={12}/></button>
+                      </div>
+                    </div>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:12}}>
+                      <span style={{fontWeight:'bold',fontSize:10,color:'#374151'}}>총 금액</span>
+                      <span style={{fontSize:16,fontWeight:900}}>{totalPrice.toLocaleString()}원</span>
+                    </div>
+                    <button onClick={handleOrder} style={{width:'100%',background:'#ec4899',color:'white',fontWeight:'bold',padding:'10px',borderRadius:12,fontSize:12,border:'none',cursor:'pointer',marginBottom:8}}>주문하기</button>
+                    <div style={{display:'flex',justifyContent:'center',paddingBottom:4}}>
+                      <SlideToPayButton onComplete={()=>{setIsPopupOpen(false);setIsProductListOpen(false);setShowOrderToast(false);setShowPayComplete(true);}}/>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* pay page */}
+            {showPayPage&&(()=>{
+              const PayPage = () => {
+                const [selPayment, setSelPayment] = useState("card");
+                const [agreeAll, setAgreeAll] = useState(false);
+                const [agrees, setAgrees] = useState([false,false,false]);
+                const [point, setPoint] = useState("");
+                const pointNum = parseInt(point.replace(/[^0-9]/g,""))||0;
+                const finalTotal = Math.max(0, orderTotal - pointNum);
+                const toggleAgree = (i) => { const next=agrees.map((v,idx)=>idx===i?!v:v); setAgrees(next); setAgreeAll(next.every(Boolean)); };
+                const toggleAll = () => { const v=!agreeAll; setAgreeAll(v); setAgrees([v,v,v]); };
+                const payments = [{id:"card",label:"신용카드",emoji:"💳"},{id:"kakao",label:"카카오페이",emoji:"💬"},{id:"naver",label:"네이버페이",emoji:"💚"},{id:"toss",label:"토스페이",emoji:"💜"},{id:"phone",label:"휴대폰",emoji:"📱"},{id:"transfer",label:"계좌이체",emoji:"🏦"}];
+                const agreeLabels = ["(필수) 구매조건 확인 및 결제 진행 동의","(필수) 개인정보 제3자 제공 동의","(선택) 마케팅 정보 수신 동의"];
+                return (
+                  <div style={{position:'absolute',inset:0,zIndex:50,background:'#f3f4f6',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:12,padding:'12px',background:'white',borderBottom:'1px solid #e5e7eb',flexShrink:0}}>
+                      <button onClick={()=>setShowPayPage(false)} style={{color:'#374151',background:'none',border:'none',cursor:'pointer'}}><Ic n="ChevronLeft" size={18}/></button>
+                      <h2 style={{fontSize:13,fontWeight:900,color:'#111',flexGrow:1}}>결제하기</h2>
+                    </div>
+                    <div style={{flexGrow:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:8,paddingBottom:8}}>
+                      {/* 주문 상품 */}
+                      <div style={{background:'white'}}>
+                        <div style={{padding:'12px 16px 8px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                          <h3 style={{fontSize:11,fontWeight:900,color:'#1f2937'}}>주문 상품 <span style={{color:'#ec4899'}}>{orders.length}</span></h3>
+                        </div>
+                        <div style={{borderTop:'1px solid #f9fafb'}}>
+                          {orders.map(o=>(
+                            <div key={o.id} style={{padding:'10px 16px',display:'flex',gap:10,alignItems:'flex-start',borderBottom:'1px solid #f9fafb'}}>
+                              <ProductImg size="md" badge={o.badge}/>
+                              <div style={{flexGrow:1,minWidth:0}}>
+                                <p style={{fontSize:10,fontWeight:'bold',color:'#1f2937',lineHeight:1.3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{o.productName}</p>
+                                {o.option&&<p style={{fontSize:8,color:'#9ca3af',marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{o.option}</p>}
+                                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:4}}>
+                                  <span style={{fontSize:8,color:'#9ca3af'}}>{o.quantity}개</span>
+                                  <span style={{fontSize:11,fontWeight:900,color:'#111'}}>{o.totalPrice.toLocaleString()}원</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* 배송지 */}
+                      <div style={{background:'white',padding:'12px 16px'}}>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+                          <h3 style={{fontSize:11,fontWeight:900,color:'#1f2937'}}>배송지</h3>
+                          <button style={{fontSize:9,color:'#9ca3af',border:'1px solid #e5e7eb',padding:'2px 8px',borderRadius:4,background:'white',cursor:'pointer'}}>변경</button>
+                        </div>
+                        <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                          <div style={{display:'flex',alignItems:'center',gap:6}}>
+                            <span style={{fontSize:10,fontWeight:900,color:'#1f2937'}}>홍길동</span>
+                            <span style={{background:'#fce7f3',color:'#ec4899',fontSize:7,fontWeight:'bold',padding:'2px 6px',borderRadius:999}}>기본</span>
+                          </div>
+                          <p style={{fontSize:9,color:'#6b7280'}}>010-1234-5678</p>
+                          <p style={{fontSize:9,color:'#6b7280'}}>[04000] 서울특별시 마포구<br/>월드컵북로 21</p>
+                          <div style={{marginTop:6,paddingTop:6,borderTop:'1px dashed #e5e7eb',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                            <span style={{fontSize:8,color:'#9ca3af'}}>배송 요청사항</span>
+                            <span style={{fontSize:8,color:'#6b7280',fontWeight:500}}>문 앞에 놓아주세요</span>
+                          </div>
+                        </div>
+                      </div>
+                      {/* 배송 방법 */}
+                      <div style={{background:'white',padding:'12px 16px'}}>
+                        <h3 style={{fontSize:11,fontWeight:900,color:'#1f2937',marginBottom:8}}>배송 방법</h3>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:10,borderRadius:8,background:'#f9fafb',border:'1px solid #f3f4f6'}}>
+                          <div style={{display:'flex',alignItems:'center',gap:8}}>
+                            <div style={{width:14,height:14,borderRadius:'50%',background:'#ec4899',border:'2px solid #ec4899',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                              <div style={{width:6,height:6,borderRadius:'50%',background:'white'}}/>
+                            </div>
+                            <span style={{fontSize:10,fontWeight:'bold',color:'#374151'}}>일반배송</span>
+                          </div>
+                          <span style={{fontSize:10,fontWeight:900,color:'#1f2937'}}>{shippingFee.toLocaleString()}원</span>
+                        </div>
+                      </div>
+                      {/* 할인 혜택 */}
+                      <div style={{background:'white',padding:'12px 16px'}}>
+                        <h3 style={{fontSize:11,fontWeight:900,color:'#1f2937',marginBottom:10}}>할인 혜택</h3>
+                        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                            <span style={{fontSize:9,color:'#6b7280'}}>쿠폰</span>
+                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                              <span style={{fontSize:9,fontWeight:'bold',color:'#3b82f6'}}>-{couponDiscount.toLocaleString()}원</span>
+                              <span style={{fontSize:8,background:'#eff6ff',color:'#60a5fa',padding:'2px 6px',borderRadius:4,fontWeight:500}}>1장 적용</span>
+                            </div>
+                          </div>
+                          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                            <span style={{fontSize:9,color:'#6b7280'}}>포인트</span>
+                            <div style={{display:'flex',alignItems:'center',gap:4}}>
+                              <input type="text" value={point} onChange={e=>setPoint(e.target.value)} placeholder="0"
+                                style={{width:64,textAlign:'right',border:'1px solid #e5e7eb',borderRadius:4,padding:'4px 8px',fontSize:9,outline:'none'}}/>
+                              <span style={{fontSize:9,color:'#9ca3af'}}>원</span>
+                              <button style={{fontSize:8,background:'#f3f4f6',color:'#6b7280',padding:'4px 6px',borderRadius:4,border:'none',cursor:'pointer'}}>전액</button>
+                            </div>
+                          </div>
+                          <p style={{fontSize:8,color:'#9ca3af'}}>보유 포인트 1,200P</p>
+                        </div>
+                      </div>
+                      {/* 결제 수단 */}
+                      <div style={{background:'white',padding:'12px 16px'}}>
+                        <h3 style={{fontSize:11,fontWeight:900,color:'#1f2937',marginBottom:10}}>결제 수단</h3>
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6}}>
+                          {payments.map(pm=>(
+                            <button key={pm.id} onClick={()=>setSelPayment(pm.id)}
+                              style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'10px 4px',borderRadius:12,border:`2px solid ${selPayment===pm.id?'#f472b6':'#f3f4f6'}`,background:selPayment===pm.id?'#fdf2f8':'#f9fafb',cursor:'pointer'}}>
+                              <span style={{fontSize:16,lineHeight:1,marginBottom:4}}>{pm.emoji}</span>
+                              <span style={{fontSize:8,fontWeight:'bold',color:selPayment===pm.id?'#db2777':'#6b7280'}}>{pm.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* 최종 결제금액 */}
+                      <div style={{background:'white',padding:'12px 16px'}}>
+                        <h3 style={{fontSize:11,fontWeight:900,color:'#1f2937',marginBottom:10}}>최종 결제금액</h3>
+                        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                          {[['상품금액',`${orderSubtotal.toLocaleString()}원`,false],['할인금액',`-${(couponDiscount+pointNum).toLocaleString()}원`,true],['배송비',`${shippingFee.toLocaleString()}원`,false]].map(([k,v,blue])=>(
+                            <div key={k} style={{display:'flex',justifyContent:'space-between',fontSize:10}}>
+                              <span style={{color:'#9ca3af'}}>{k}</span>
+                              <span style={{fontWeight:'bold',color:blue?'#3b82f6':'#1f2937'}}>{v}</span>
+                            </div>
+                          ))}
+                          <div style={{height:1,background:'#f3f4f6',margin:'4px 0'}}/>
+                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
+                            <span style={{fontSize:11,fontWeight:900,color:'#111'}}>총 결제금액</span>
+                            <span style={{fontSize:14,fontWeight:900,color:'#ef4444'}}>{finalTotal.toLocaleString()}원</span>
+                          </div>
+                        </div>
+                      </div>
+                      {/* 약관 동의 */}
+                      <div style={{background:'white',padding:'12px 16px'}}>
+                        <button onClick={toggleAll} style={{display:'flex',alignItems:'center',gap:8,width:'100%',paddingBottom:10,borderBottom:'1px solid #f3f4f6',marginBottom:8,background:'none',border:'none',cursor:'pointer',textAlign:'left'}}>
+                          <div style={{width:16,height:16,borderRadius:4,border:`2px solid ${agreeAll?'#ec4899':'#d1d5db'}`,display:'flex',alignItems:'center',justifyContent:'center',background:agreeAll?'#ec4899':'white',flexShrink:0}}>
+                            {agreeAll&&<Ic n="Check" size={9} cls="text-white" sw={3}/>}
+                          </div>
+                          <span style={{fontSize:10,fontWeight:900,color:'#1f2937'}}>전체 동의</span>
+                        </button>
+                        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                          {agreeLabels.map((lbl,i)=>(
+                            <button key={i} onClick={()=>toggleAgree(i)} style={{display:'flex',alignItems:'center',gap:8,width:'100%',background:'none',border:'none',cursor:'pointer',textAlign:'left'}}>
+                              <div style={{width:14,height:14,borderRadius:4,border:`2px solid ${agrees[i]?'#ec4899':'#d1d5db'}`,display:'flex',alignItems:'center',justifyContent:'center',background:agrees[i]?'#ec4899':'white',flexShrink:0}}>
+                                {agrees[i]&&<Ic n="Check" size={8} cls="text-white" sw={3}/>}
+                              </div>
+                              <span style={{fontSize:8,color:'#6b7280',lineHeight:1.5}}>{lbl}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{flexShrink:0,background:'white',borderTop:'1px solid #e5e7eb',padding:'12px 16px'}}>
+                      <button onClick={()=>{setShowPayPage(false);setIsProductListOpen(false);setShowPayComplete(true);}}
+                        style={{width:'100%',padding:12,borderRadius:12,fontWeight:900,color:'white',fontSize:12,border:'none',cursor:'pointer',background:'linear-gradient(90deg,#f43f5e,#ec4899)'}}>
+                        {finalTotal.toLocaleString()}원 결제하기
+                      </button>
+                    </div>
+                  </div>
+                );
+              };
+              return <PayPage/>;
+            })()}
+
+            {showPayComplete&&(
+              <div style={{position:'absolute',bottom:0,left:0,width:'100%',zIndex:60}}>
+                <PayCompleteModal orders={orders} onClose={()=>{setShowPayComplete(false);setOrders([]);}}/>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── 셀러뷰 ── */}
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
+          <div style={{marginBottom:8,display:'inline-flex',alignItems:'center',gap:6,background:'#ffedd5',color:'#c2410c',padding:'4px 12px',borderRadius:999,fontSize:12,fontWeight:'bold'}}>
+            <Ic n="Store" size={12}/> 셀러뷰
+          </div>
+          <div style={mobileStyle}>
+            <div style={{position:'absolute',top:0,width:'100%',height:32,display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0 20px',zIndex:20,color:'white',fontSize:10}}>
+              <span>8:06</span><div style={{opacity:.5}}>|||</div>
+            </div>
+            <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,#1e293b,#111827,#000)'}}>
+              <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:60,opacity:.2}}>🎪</div>
+            </div>
+            <div style={{position:'absolute',top:36,left:0,width:'100%',padding:'0 12px',zIndex:10,display:'flex',justifyContent:'space-between',alignItems:'flex-start',color:'white'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#f472b6,#ef4444)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14}}>👩</div>
+                <div><div style={{fontWeight:'bold',fontSize:11}}>꽃꽃언니 🎀</div><div style={{fontSize:9,opacity:.8}}>❤️ 5만  🔥 723</div></div>
+              </div>
+              <div style={{display:'flex',gap:8}}><Ic n="MoreVertical" size={14}/><Ic n="Maximize2" size={14}/></div>
+            </div>
+
+            {!isSellerManagementOpen&&activeProduct&&(
+              <div style={{position:'absolute',bottom:80,left:0,width:'100%',padding:'0 12px',zIndex:10}}>
+                <div onClick={()=>setIsSellerManagementOpen(true)} style={{position:'relative',background:'white',borderRadius:8,display:'flex',alignItems:'stretch',boxShadow:'0 10px 25px rgba(0,0,0,0.2)',overflow:'hidden',cursor:'pointer'}}>
+                  <div style={{position:'absolute',top:0,left:0,background:'#2563eb',color:'white',fontWeight:'bold',borderRadius:'0 0 4px 0',zIndex:10,fontSize:5,lineHeight:1,padding:'1px 2px',whiteSpace:'nowrap'}}>한정상품</div>
+                  <div style={{width:56,background:'#e0f2fe',display:'flex',alignItems:'center',justifyContent:'center'}}><Ic n="Store" size={20} cls="text-blue-400"/></div>
+                  <div style={{flexGrow:1,padding:8,display:'flex',flexDirection:'column',justifyContent:'center',minWidth:0}}>
+                    <h3 style={{fontSize:10,fontWeight:'bold',color:'#111',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{activeProduct.name}</h3>
+                    {activeProduct.depth!==0&&upOptionText&&<p style={{fontSize:8,color:'#6b7280',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{upOptionText}</p>}
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginTop:2}}>
+                      <span style={{fontWeight:900,fontSize:11}}>{activeProduct.price.toLocaleString()}원</span>
+                      <div style={{textAlign:'right'}}>
+                        <div style={{fontSize:8,fontWeight:'bold',color:'#ef4444'}}>판매가능 {currentStock+120}</div>
+                        <div style={{fontSize:8,fontWeight:'bold',color:'#9ca3af'}}>재고 {currentStock}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!isSellerManagementOpen&&(
+              <div style={{position:'absolute',bottom:0,width:'100%',padding:'8px 8px 16px',zIndex:10,display:'flex',alignItems:'flex-end',gap:6,color:'white',background:'linear-gradient(to top,rgba(0,0,0,0.7),transparent)'}}>
+                <div onClick={()=>setIsSellerManagementOpen(true)} style={{position:'relative',width:36,height:36,background:'rgba(255,255,255,0.2)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid rgba(255,255,255,0.3)',cursor:'pointer'}}>
+                  <Ic n="ShoppingBag" size={16}/>
+                  <span style={{position:'absolute',top:-4,right:-4,background:'#ef4444',fontSize:8,width:14,height:14,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:'bold'}}>1</span>
+                </div>
+                <div style={{flexGrow:1,background:'rgba(0,0,0,0.4)',color:'rgba(255,255,255,0.7)',fontSize:10,borderRadius:999,padding:'8px 12px',border:'1px solid rgba(255,255,255,0.2)'}}>메시지 입력</div>
+                <div style={{display:'flex',alignItems:'center',gap:6}}>
+                  {[['Gift','선물'],['Ticket','쿠폰'],['Heart','좋아요']].map(([n,l])=>(
+                    <div key={n} style={{display:'flex',flexDirection:'column',alignItems:'center'}}><Ic n={n} size={16}/><span style={{fontSize:8}}>{l}</span></div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* seller management sheet */}
+            <div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:40,background:'white',borderRadius:'16px 16px 0 0',display:'flex',flexDirection:'column',height:'75%',transform:isSellerManagementOpen?'translateY(0)':'translateY(100%)',transition:'transform 0.3s'}}>
+              <div style={{padding:12,display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'1px solid #e5e7eb',flexShrink:0}}>
+                <Ic n="RotateCw" size={14} style={{color:'#9ca3af',cursor:'pointer'}}/>
+                <h2 style={{fontWeight:'bold',fontSize:12}}>한정 판매 상품</h2>
+                <button onClick={()=>setIsSellerManagementOpen(false)} style={{color:'#374151',background:'none',border:'none',cursor:'pointer'}}><Ic n="X" size={16}/></button>
+              </div>
+              <div style={{padding:'8px 12px',textAlign:'center',background:'#f9fafb',flexShrink:0}}>
+                <p style={{fontSize:9,color:'#6b7280'}}>한정 판매 상품을 선택해주세요.</p>
+              </div>
+              <div style={{flexGrow:1,overflowY:'auto',padding:12,display:'flex',flexDirection:'column',gap:16}}>
+                {products.map(prod=>(
+                  <div key={prod.id} style={{display:'flex',flexDirection:'column',gap:8}}>
+                    <div style={{display:'flex',alignItems:'flex-start',gap:8}}>
+                      <div style={{width:48,height:48,borderRadius:8,background:'#e0f2fe',display:'flex',alignItems:'center',justifyContent:'center',position:'relative',flexShrink:0}}>
+                        <div style={{position:'absolute',top:0,left:0,background:'#6366f1',color:'white',fontWeight:'bold',borderRadius:'0 0 4px 0',fontSize:5,lineHeight:1,padding:'1px 2px',whiteSpace:'nowrap'}}>한정</div>
+                        <Ic n="Store" size={16} cls="text-blue-400"/>
+                      </div>
+                      <div style={{flexGrow:1,minWidth:0}}>
+                        <h4 style={{fontWeight:'bold',fontSize:10,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{prod.name}</h4>
+                        <span style={{fontWeight:900,fontSize:11}}>{prod.price.toLocaleString()}원</span>
+                      </div>
+                      <div style={{display:'flex',flexDirection:'column',gap:4,flexShrink:0}}>
+                        <button onClick={()=>openSellerOptionPopup(prod.id)} style={{width:44,padding:'4px 0',borderRadius:4,fontSize:8,fontWeight:'bold',border:'none',cursor:'pointer',background:activeProductId===prod.id?'#ef4444':'#e5e7eb',color:activeProductId===prod.id?'white':'#6b7280'}}>UP</button>
+                        <button onClick={()=>handleDown(prod.id)} style={{width:44,padding:'4px 0',borderRadius:4,fontSize:8,fontWeight:'bold',border:`1px solid ${activeProductId===prod.id?'#d1d5db':'#e5e7eb'}`,color:activeProductId===prod.id?'#374151':'#d1d5db',background:'white',cursor:'pointer'}}>DOWN</button>
+                        <button onClick={()=>toggleStoreOn(prod.id)} style={{width:44,padding:'4px 0',borderRadius:4,fontSize:8,fontWeight:'bold',border:'none',cursor:'pointer',background:storeOnProducts[prod.id]?'#22c55e':'#e5e7eb',color:storeOnProducts[prod.id]?'white':'#6b7280'}}>
+                          {storeOnProducts[prod.id]?"스토어ON":"스토어"}
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                      <div style={{display:'flex',border:'1px solid #e5e7eb',borderRadius:4,overflow:'hidden',fontSize:8}}>
+                        {["판매예정","판매중","품절"].map(s=>(
+                          <button key={s} onClick={()=>updateStatus(prod.id,s)} style={{padding:'4px 6px',fontSize:8,fontWeight:'bold',border:'none',borderRight:'1px solid #e5e7eb',cursor:'pointer',color:productStatuses[prod.id]===s?'#ef4444':'#9ca3af',background:productStatuses[prod.id]===s?'#fef2f2':'white'}}>{s}</button>
+                        ))}
+                      </div>
+                      <div style={{flexGrow:1,display:'flex',justifyContent:'space-between',background:'#f9fafb',borderRadius:4,padding:'4px 6px',fontSize:8}}>
+                        {[['판매','50'],['결제','45'],['적립','5']].map(([k,v])=>(
+                          <div key={k} style={{textAlign:'center'}}><div style={{color:'#9ca3af'}}>{k}</div><div style={{fontWeight:900}}>{v}</div></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* seller option popup */}
+            {isSellerOptionPopupOpen&&(
+              <>
+                <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',zIndex:50}} onClick={()=>setIsSellerOptionPopupOpen(false)}/>
+                <div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:50,background:'white',borderRadius:'16px 16px 0 0',display:'flex',flexDirection:'column',maxHeight:'70%'}}>
+                  <div style={{width:32,height:4,background:'#d1d5db',borderRadius:999,margin:'8px auto',flexShrink:0}}/>
+                  <div style={{padding:'0 12px 12px',flexShrink:0}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                      <div><h3 style={{fontSize:14,fontWeight:'bold'}}>옵션 선택</h3><p style={{fontSize:9,color:'#9ca3af'}}>UP할 옵션을 선택하세요.</p></div>
+                      <button onClick={()=>setIsSellerOptionPopupOpen(false)} style={{padding:4,background:'#f3f4f6',borderRadius:'50%',border:'none',cursor:'pointer'}}><Ic n="X" size={14}/></button>
+                    </div>
+                  </div>
+                  <div style={{flexGrow:1,overflowY:'auto',padding:'0 12px',display:'flex',flexDirection:'column',gap:6,paddingBottom:8}}>
+                    {currentSellerOptions.map((opt,idx)=>{
+                      const soldOut = opt.stock<1;
+                      return (
+                        <div key={idx} onClick={()=>!soldOut&&setSellerSelectedOptionIdx(idx)}
+                          style={{padding:8,borderRadius:8,border:`2px solid ${soldOut?'#f3f4f6':sellerSelectedOptionIdx===idx?'#ef4444':'#f3f4f6'}`,display:'flex',justifyContent:'space-between',alignItems:'center',cursor:soldOut?'not-allowed':'pointer',background:soldOut?'#f9fafb':sellerSelectedOptionIdx===idx?'#fef2f2':'white',opacity:soldOut?.5:1}}>
+                          <div>
+                            <p style={{fontWeight:'bold',fontSize:10,color:sellerSelectedOptionIdx===idx&&!soldOut?'#ef4444':'#1f2937'}}>{opt.name} {soldOut?"(품절)":""}</p>
+                            <p style={{fontSize:8,color:opt.stock<=5&&!soldOut?'#ef4444':'#9ca3af'}}>재고: {opt.stock}개</p>
+                          </div>
+                          {!soldOut&&(
+                            <div style={{width:16,height:16,borderRadius:'50%',border:`2px solid ${sellerSelectedOptionIdx===idx?'#ef4444':'#d1d5db'}`,display:'flex',alignItems:'center',justifyContent:'center',background:sellerSelectedOptionIdx===idx?'#ef4444':'white'}}>
+                              {sellerSelectedOptionIdx===idx&&<Ic n="Check" size={10} cls="text-white" sw={3}/>}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{padding:12,display:'flex',gap:8,borderTop:'1px solid #e5e7eb',flexShrink:0}}>
+                    <button onClick={()=>setIsSellerOptionPopupOpen(false)} style={{padding:'8px 12px',borderRadius:8,background:'#f3f4f6',fontWeight:'bold',color:'#9ca3af',fontSize:9,border:'none',cursor:'pointer'}}>닫기</button>
+                    <button onClick={handleSellerUpExecute} style={{flex:1,padding:12,borderRadius:8,background:'#ef4444',color:'white',fontWeight:'bold',fontSize:14,border:'none',cursor:'pointer'}}>UP 하기</button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ══════════════════════════════════
+   BusinessCenter
+══════════════════════════════════ */
+const BusinessCenter = () => {
+  const [selectedProducts, setSelectedProducts] = useState([0]);
+  const [currentPage, setCurrentPage] = useState(4);
+  const bizProducts = [
+    {id:0,name:"에디재버 500",code:"9774ozm",saleStatus:"판매가능",livePrice:10000,stock:100,period:"2025.11.01 16:00 ~ 2025.11.01 23:59"},
+    {id:1,name:"500개 한정 아트살 방부 디바이스",code:"9774ozm",saleStatus:"판매가능",livePrice:10000,stock:100,period:"2025.11.01 16:00 ~ 2025.11.01 23:59"},
+    {id:2,name:"돌싱 신드림 한정판 출시",code:"9774ozm",saleStatus:"판매대기",livePrice:10000,stock:100,period:"2025.11.01 16:00 ~ 2025.11.01 23:59"},
+    {id:3,name:"이마트 24 고급상 소식 프로모션",code:"9774ozm",saleStatus:"판매대기",livePrice:10000,stock:100,period:"2025.11.01 16:00 ~ 2025.11.01 23:59"},
+    {id:4,name:"럭데마트 신메뉴 레귤 이베트",code:"9774ozm",saleStatus:"판매가능",livePrice:10000,stock:100,period:"2025.11.01 16:00 ~ 2025.11.01 23:59"},
+  ];
+  const toggleProduct = id => setSelectedProducts(prev=>prev.includes(id)?prev.filter(p=>p!==id):[...prev,id]);
+  return (
+    <div style={{background:'#f9fafb',minHeight:'calc(100vh - 60px)',padding:24}}>
+      <div style={{maxWidth:1152,margin:'0 auto'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <Ic n="ChevronLeft" size={20} style={{color:'#9ca3af',cursor:'pointer'}}/>
+            <h1 style={{fontSize:20,fontWeight:'bold'}}>라이브 방송 상품 설정</h1>
+            <span style={{color:'#ec4899',fontSize:14}}>진행대기중</span>
+          </div>
+          <button style={{background:'#ec4899',color:'white',padding:'8px 16px',borderRadius:8,display:'flex',alignItems:'center',gap:8,border:'none',cursor:'pointer',fontWeight:'bold'}}>
+            <Ic n="Plus" size={16}/> 상품추가
+          </button>
+        </div>
+        <div style={{background:'#fdf2f8',border:'1px solid #fbcfe8',borderRadius:8,padding:16,marginBottom:24,fontSize:14,color:'#be185d'}}>
+          <p>• 상품을 추가하시고, 상품 옆의 '등록 추가' 버튼을 눌러주세요.</p>
+          <p>• 한정판매 외의 스토어에도 상품을 등록하시려면 스토어 등록 기능을 이용해 주세요.</p>
+        </div>
+        <div style={{background:'white',borderRadius:8,border:'1px solid #e5e7eb',padding:16,marginBottom:16}}>
+          <h3 style={{fontWeight:500,marginBottom:12,fontSize:14}}>판매시 상품 간편 등록</h3>
+          <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+            {[['상품정보','상품명을 입력하세요','text',192],['라이브가','10,000','text',96],['상품 수량','150','text',80]].map(([label,ph,type,w])=>(
+              <div key={label} style={{display:'flex',alignItems:'center',gap:8}}>
+                <span style={{fontSize:14,color:'#6b7280'}}>{label}</span>
+                <input type={type} placeholder={ph} defaultValue={ph==='상품명을 입력하세요'?undefined:ph} style={{border:'1px solid #e5e7eb',borderRadius:6,padding:'8px 12px',fontSize:14,width:w,outline:'none'}}/>
+                {label!=='상품정보'&&<span style={{fontSize:14}}>원</span>}
+              </div>
+            ))}
+            <button style={{background:'#1f2937',color:'white',padding:'8px 16px',borderRadius:6,fontSize:14,border:'none',cursor:'pointer'}}>상품등록</button>
+          </div>
+        </div>
+        <div style={{background:'white',borderRadius:8,border:'1px solid #e5e7eb'}}>
+          <div style={{padding:16,borderBottom:'1px solid #e5e7eb',display:'flex',alignItems:'center',gap:16}}>
+            <span style={{fontSize:14,color:'#6b7280'}}>상세조건</span>
+            <select style={{border:'1px solid #e5e7eb',borderRadius:6,padding:'8px 12px',fontSize:14,outline:'none'}}><option>높낮임</option></select>
+            <div style={{display:'flex',alignItems:'center',border:'1px solid #e5e7eb',borderRadius:6}}>
+              <Ic n="Search" size={16} style={{color:'#9ca3af',margin:'0 8px'}}/>
+              <input type="text" placeholder="검색어를 입력해 주세요" style={{padding:'8px 12px',fontSize:14,border:'none',outline:'none',width:192}}/>
+            </div>
+            <button style={{background:'#1f2937',color:'white',padding:'8px 16px',borderRadius:6,fontSize:14,border:'none',cursor:'pointer'}}>검색</button>
+          </div>
+          <div style={{padding:16,borderBottom:'1px solid #e5e7eb',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#f9fafb'}}>
+            <span style={{fontSize:14}}>선택 <span style={{color:'#ec4899',fontWeight:500}}>{selectedProducts.length}</span></span>
+            <div style={{display:'flex',gap:8}}>
+              {["저장","스토어 일괄 등록","상품 목록 다운로드"].map(t=>(
+                <button key={t} style={{border:'1px solid #e5e7eb',background:'white',padding:'8px 16px',borderRadius:6,fontSize:14,cursor:'pointer'}}>{t}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',fontSize:14,borderCollapse:'collapse'}}>
+              <thead style={{background:'#f9fafb',borderBottom:'1px solid #e5e7eb'}}>
+                <tr>
+                  <th style={{padding:12,textAlign:'left',width:40}}><input type="checkbox" style={{accentColor:'#ec4899'}}/></th>
+                  {["이미지","상품명","상품코드","판매상태","스토어","라이브가","재고","판매기간"].map(h=>(
+                    <th key={h} style={{padding:12,textAlign:'left'}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {bizProducts.map(product=>(
+                  <tr key={product.id} style={{borderBottom:'1px solid #e5e7eb',background:selectedProducts.includes(product.id)?'#fdf2f8':'white'}}>
+                    <td style={{padding:12}}><input type="checkbox" checked={selectedProducts.includes(product.id)} onChange={()=>toggleProduct(product.id)} style={{accentColor:'#ec4899'}}/></td>
+                    <td style={{padding:12}}><div style={{width:48,height:48,background:'#e0f2fe',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center'}}><Ic n="Store" size={18} cls="text-blue-400"/></div></td>
+                    <td style={{padding:12,maxWidth:192}}><div style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{product.name}</div></td>
+                    <td style={{padding:12,color:'#6b7280'}}>{product.code}</td>
+                    <td style={{padding:12}}><span style={{fontSize:12,padding:'4px 8px',borderRadius:4,background:product.saleStatus==="판매가능"?'#fce7f3':'#f3f4f6',color:product.saleStatus==="판매가능"?'#ec4899':'#6b7280'}}>{product.saleStatus}</span></td>
+                    <td style={{padding:12}}>
+                      <div style={{display:'flex',gap:4}}>
+                        <button style={{fontSize:12,border:'none',borderRadius:4,padding:'4px 8px',background:'#1f2937',color:'white',cursor:'pointer'}}>스토어</button>
+                        <button style={{fontSize:12,border:'1px solid #e5e7eb',borderRadius:4,padding:'4px 8px',background:'white',cursor:'pointer'}}>관리</button>
+                      </div>
+                    </td>
+                    <td style={{padding:12,fontWeight:500}}>{product.livePrice.toLocaleString()}</td>
+                    <td style={{padding:12}}>{product.stock}</td>
+                    <td style={{padding:12,fontSize:12,color:'#6b7280',whiteSpace:'nowrap'}}>{product.period}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{padding:16,display:'flex',justifyContent:'center',alignItems:'center',gap:4}}>
+            <button style={{padding:8,background:'none',border:'none',cursor:'pointer'}}><Ic n="ChevronLeft" size={16}/></button>
+            {[1,2,3,4,5,6,7,8,9,10].map(page=>(
+              <button key={page} onClick={()=>setCurrentPage(page)} style={{width:32,height:32,borderRadius:6,fontSize:14,border:'none',cursor:'pointer',background:page===currentPage?'#1f2937':'transparent',color:page===currentPage?'white':'#374151'}}>{page}</button>
+            ))}
+            <button style={{padding:8,background:'none',border:'none',cursor:'pointer'}}><Ic n="ChevronRight" size={16}/></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ══════════════════════════════════
+   App
+══════════════════════════════════ */
+function App() {
+  const [activeTab, setActiveTab] = useState("simulation");
+  return (
+    <div style={{minHeight:'100vh',background:'#f9fafb'}}>
+      <header style={{background:'white',borderBottom:'1px solid #e5e7eb',position:'sticky',top:0,zIndex:50}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:24}}>
+            <h1 style={{fontSize:20,fontWeight:'bold',color:'#ec4899',margin:0}}>Grip 비즈니스</h1>
+            <nav style={{display:'flex',gap:4}}>
+              {[["simulation","방송 시뮬레이션 화면"],["business","비즈니스센터"]].map(([tab,label])=>(
+                <button key={tab} onClick={()=>setActiveTab(tab)} style={{padding:'8px 16px',borderRadius:8,fontWeight:500,border:'none',cursor:'pointer',background:activeTab===tab?'#ec4899':'transparent',color:activeTab===tab?'white':'#374151'}}>{label}</button>
+              ))}
+            </nav>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:16}}>
+            <Ic n="Search" size={20} style={{color:'#9ca3af'}}/>
+            <Ic n="Bell" size={20} style={{color:'#9ca3af'}}/>
+            <div style={{width:32,height:32,background:'#e5e7eb',borderRadius:'50%'}}/>
+          </div>
+        </div>
+      </header>
+      {activeTab==="simulation" ? <BroadcastSimulation/> : <BusinessCenter/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
