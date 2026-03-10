@@ -1,2 +1,2 @@
 # ASIS_limit_LIVE
-AS-IS 스토어라이브
+AS-IS 한정판매 라이브 
